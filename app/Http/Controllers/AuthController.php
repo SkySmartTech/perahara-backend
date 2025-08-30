@@ -63,7 +63,7 @@ class AuthController extends Controller
         $redirect = match ($user->user_type) {
             'admin'            => '/admin/dashboard',
             'organizer'        => '/organizer/dashboard',
-            'service_provider' => '/service-provider/dashboard',
+            'service_provider' => '/service/dashboard',
             default            => '/user/dashboard',
         };
 

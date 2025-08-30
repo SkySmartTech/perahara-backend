@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('service_types', function (Blueprint $table) {
             $table->id();
-            $table->string('service_type')->unique();
+            $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->timestamps();
         });
