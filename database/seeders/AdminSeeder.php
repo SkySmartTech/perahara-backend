@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders; 
+namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
@@ -14,9 +14,9 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@perahera.test'],
             [
                 'username'        => 'perahera_admin',
-                'password'        => Hash::make('ChangeMe_123'),
+                'password'        => Hash::make('perahara@123'),
                 'user_type'       => 'admin',
-                'service_type_id' => null, 
+                'service_type_id' => null,
             ]
         );
     }
