@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         // Seed service types
         $this->call([
             ServiceTypesSeeder::class,
+            AdminSeeder::class,
         ]);
     }
 }
