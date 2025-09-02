@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\UserLogin;
 use App\Models\ServiceType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -59,6 +61,12 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
+        
+        $loginRecord = UserLogin::create([
+            'user_id'    => $user->id,
+            'ip_address' => $request->ip(),
+            'login_at'   => Carbon::now(),
+        ]);
 
         $redirect = match ($user->user_type) {
             'admin'            => '/admin/dashboard',
@@ -97,7 +105,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = $request->user();
+
         $request->user()->currentAccessToken()->delete();
+
+        $lastLogin = UserLogin::where('user_id', $user->id)
+                    ->latest('login_at')
+                    ->first();
+
+        if ($lastLogin && !$lastLogin->logout_at) {
+            $lastLogin->update(['logout_at' => now()]);
+        }
+
         return response()->json(['message' => 'Logged out']);
     }
 }
