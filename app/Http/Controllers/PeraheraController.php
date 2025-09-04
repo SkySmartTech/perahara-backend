@@ -32,6 +32,7 @@ class PeraheraController extends Controller
         $data = $request->validate([
             'name'        => ['required','string','max:255'],
             'description' => ['nullable','string'],
+            'user_id'     => ['prohibited'],
             'start_date' => [
                 'required','date',
                 function ($attribute, $value, $fail) use ($request) {
@@ -58,11 +59,12 @@ class PeraheraController extends Controller
             'status'      => ['sometimes','in:active,inactive,cancelled'],
         ]);
 
-        $perahera = Perahera::create(array_merge([
-            'user_id' => $user->id,
-        ], $data));
-
-        return response()->json($perahera, 201);
+        $perahera = new Perahera($data);
+        $perahera->user()->associate($user);
+        $perahera->save();
+        return (new PeraheraResource($perahera->load('user')))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Perahera $perahera)
@@ -122,7 +124,7 @@ class PeraheraController extends Controller
 
         $perahera->update($data);
 
-        return response()->json($perahera);
+        return new PeraheraResource($perahera->loadMissing('user'));
     }
 
     public function destroy(Request $request, Perahera $perahera)

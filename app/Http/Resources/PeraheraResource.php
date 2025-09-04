@@ -18,10 +18,13 @@ class PeraheraResource extends JsonResource
             'location'    => $this->location,
             'status'      => $this->status,
             // only return limited user info
-            'organizer'   => [
-                'id'       => $this->user->id,
-                'username' => $this->user->username,
-            ],
+            'organizer' => $this->whenLoaded('user', function () {
+                return [
+                    'id'       => $this->user->id,
+                    'username' => $this->user->username,
+                ];
+            }),
+
         ];
     }
 }
