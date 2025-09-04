@@ -14,10 +14,11 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('image')->nullable(); // store URL or file path
+            $table->string('image', 2048)->nullable(); // store URL or file path
             $table->string('location');
             $table->enum('status', ['active', 'inactive', 'cancelled'])->default('active');
             $table->timestamps();
+            $table->index(['start_date', 'status']);
         });
     }
 

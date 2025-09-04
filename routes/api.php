@@ -29,10 +29,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+// Public
+Route::get('/peraheras', [PeraheraController::class, 'index']);
+Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
+
+// Protected
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/peraheras', [PeraheraController::class, 'index']);
     Route::post('/peraheras', [PeraheraController::class, 'store']);
-    Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
-    Route::put('/peraheras/{perahera}', [PeraheraController::class, 'update']);
+    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
     Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
 });
