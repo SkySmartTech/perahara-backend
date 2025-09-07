@@ -18,13 +18,12 @@ use App\Http\Controllers\PeraheraController;
 Route::post('/register', [AuthController::class, 'register']); 
 Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/service-types', [ServiceTypeController::class, 'types']);
+Route::get('/services',  [ServiceController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',       [AuthController::class, 'me']);
     Route::post('/logout',  [AuthController::class, 'logout']);
 
-    
-    Route::get('/services',  [ServiceController::class, 'index']);
     Route::post('/services', [ServiceController::class, 'store']);
 });
 

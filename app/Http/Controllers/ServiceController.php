@@ -9,6 +9,45 @@ class ServiceController extends Controller
 {
     public function index(Request $request)
     {
+        $query = Service::with(['serviceType'])
+            ->where('status', 'active');
+
+        // Filter by service type
+        if ($request->has('service_type_id')) {
+            $query->where('service_type_id', $request->service_type_id);
+        }
+
+        // Filter by location
+        if ($request->has('location')) {
+            $query->where('location', 'like', '%' . $request->location . '%');
+        }
+
+        // Filter by search term
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        $services = $query->latest()->get();
+
+        return response()->json($services);
+    }
+
+    // Get single service
+    public function show($id)
+    {
+        $service = Service::with(['serviceType', 'user'])
+            ->where('status', 'active')
+            ->findOrFail($id);
+
+        return response()->json($service);
+    }
+
+    public function myServices(Request $request)
+    {
         $user = $request->user();
 
         if ($user->user_type !== 'service_provider') {
@@ -27,18 +66,31 @@ class ServiceController extends Controller
         }
 
         $data = $request->validate([
-            'service_type_id' => ['required','exists:service_types,id'],
-            'service_name'    => ['required','string','max:255'],
-            'description'     => ['nullable','string'],
-            'price'           => ['nullable','numeric','min:0'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'location' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['nullable', 'string', 'in:active,inactive'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('services', 'public');
+        }
+
         $service = Service::create([
-            'user_id'        => $user->id,
-            'service_type_id'=> $data['service_type_id'],
-            'service_name'   => $data['service_name'],
-            'description'    => $data['description'] ?? null,
-            'price'          => $data['price'] ?? null,
+            'user_id' => $user->id,
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'location' => $data['location'],
+            'phone' => $data['phone'],
+            'service_type_id' => $user->service_type_id,
+            'price' => $data['price'] ?? null,
+            'status' => $data['status'] ?? 'active',
+            'image' => $imagePath,
         ]);
 
         return response()->json($service, 201);

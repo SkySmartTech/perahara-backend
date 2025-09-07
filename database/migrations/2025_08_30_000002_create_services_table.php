@@ -11,9 +11,13 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('service_type_id')->constrained('service_types')->cascadeOnDelete();
-            $table->string('service_name');
+            $table->string('name');
             $table->text('description')->nullable();
+            $table->string('location');
+            $table->string('phone', 20);
             $table->decimal('price', 10, 2)->nullable();
+            $table->string('image')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
