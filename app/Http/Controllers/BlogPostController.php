@@ -11,7 +11,7 @@ class BlogPostController extends Controller
     // Public: view all posts
     public function index()
     {
-        return BlogPost::with('user:id,username')->latest()->get();
+        return BlogPost::with('user:id,username')->latest()->paginate(15);
     }
 
     // Public: view a single post
@@ -26,13 +26,10 @@ class BlogPostController extends Controller
         $data = $request->validate([
             'title'     => ['required','string','max:255'],
             'content'   => ['required','string'],
-            'image_url' => ['nullable','string'],
+            'image_url' => ['nullable','url','max:2048'],
         ]);
 
-        $post = BlogPost::create(array_merge(
-            ['user_id' => $request->user()->id],
-            $data
-        ));
+        $post = $request->user()->blogPosts()->create($data);
 
         return response()->json($post, 201);
     }
@@ -49,7 +46,7 @@ class BlogPostController extends Controller
         $data = $request->validate([
             'title'     => ['sometimes','string','max:255'],
             'content'   => ['sometimes','string'],
-            'image_url' => ['nullable','string'],
+            'image_url' => ['sometimes','nullable','url','max:2048'],
         ]);
 
         $blogPost->update($data);
