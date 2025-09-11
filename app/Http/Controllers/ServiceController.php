@@ -106,12 +106,13 @@ class ServiceController extends Controller
             'description' => ['sometimes', 'string'],
             'location' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'string', 'max:20'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'status' => ['nullable', 'string', 'in:active,inactive'],
-            'image' => ['nullable', 'string', 'url', 'max:2048'], // image URL for update
+            'price' => ['sometimes', 'numeric', 'min:0'],
+            'status' => ['sometimes', 'in:active,inactive'],
+            'image' => ['sometimes', 'nullable', 'string', 'url', 'active_url', 'max:2048'], // image URL for update
         ]);
 
         $service->update($data);
+        $service->loadMissing('serviceType');
 
         return response()->json($service);
     }
