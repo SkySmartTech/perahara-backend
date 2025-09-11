@@ -10,7 +10,10 @@ class ServiceController extends Controller
     // List all active services with optional filters
     public function index(Request $request)
     {
-        $query = Service::with(['serviceType', 'provider'])
+        $query = Service::with([
+            'serviceType:id,service_type',
+            'provider:id,username'
+        ])
             ->where('status', 'active');
 
         // Filter by service type
@@ -39,10 +42,12 @@ class ServiceController extends Controller
     // Get single service
     public function show($id)
     {
-        $service = Service::with(['serviceType', 'provider'])
+        $service = Service::with([
+            'serviceType:id,name',
+            'provider:id,name'
+        ])
             ->where('status', 'active')
             ->findOrFail($id);
-
         return response()->json($service);
     }
 
@@ -74,7 +79,8 @@ class ServiceController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
-            'image' => ['nullable', 'string', 'url', 'max:2048'], // Accept image URL
+            'image' => ['nullable', 'string', 'url', 'max:255'], // keep in sync with DB column
+
         ]);
 
         $service = Service::create([
@@ -108,9 +114,9 @@ class ServiceController extends Controller
             'description' => ['sometimes', 'string'],
             'location' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'string', 'max:20'],
-            'price' => ['sometimes', 'numeric', 'min:0'],
+            'price' => ['sometimes', 'decimal:0,2', 'min:0'],
             'status' => ['sometimes', 'in:active,inactive'],
-            'image' => ['sometimes', 'nullable', 'string', 'url', 'max:2048'], // image URL
+            'image' => ['sometimes', 'nullable', 'string', 'url', 'starts_with:https://,http://', 'max:2048'], // image URL
         ]);
 
         $service->update($data);
