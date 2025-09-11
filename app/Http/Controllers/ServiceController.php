@@ -10,7 +10,7 @@ class ServiceController extends Controller
     // List all active services with optional filters
     public function index(Request $request)
     {
-        $query = Service::with(['serviceType'])
+        $query = Service::with(['serviceType', 'provider'])
             ->where('status', 'active');
 
         // Filter by service type
@@ -39,7 +39,7 @@ class ServiceController extends Controller
     // Get single service
     public function show($id)
     {
-        $service = Service::with(['serviceType', 'user'])
+        $service = Service::with(['serviceType', 'provider'])
             ->where('status', 'active')
             ->findOrFail($id);
 
@@ -89,6 +89,8 @@ class ServiceController extends Controller
             'image' => $data['image'] ?? null,
         ]);
 
+        $service->loadMissing(['serviceType', 'provider']);
+
         return response()->json($service, 201);
     }
 
@@ -108,11 +110,11 @@ class ServiceController extends Controller
             'phone' => ['sometimes', 'string', 'max:20'],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'status' => ['sometimes', 'in:active,inactive'],
-            'image' => ['sometimes', 'nullable', 'string', 'url', 'active_url', 'max:2048'], // image URL for update
+            'image' => ['sometimes', 'nullable', 'string', 'url', 'max:2048'], // image URL
         ]);
 
         $service->update($data);
-        $service->loadMissing('serviceType');
+        $service->loadMissing(['serviceType', 'provider']);
 
         return response()->json($service);
     }
