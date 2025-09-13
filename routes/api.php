@@ -8,47 +8,99 @@ use App\Http\Controllers\BlogPostController;
 use App\Http\Controllers\PeraheraController;
 use App\Http\Controllers\ServiceTypeController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+use App\Http\Controllers\AboutItemController;
+use App\Http\Controllers\SubAboutItemController;
+use App\Http\Controllers\SubAboutItemContentController;
+use App\Http\Controllers\SubAboutItemContentDetailController;
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Public routes (viewable without auth)
+|
+*/
 
-
-
-
-
-Route::post('/register', [AuthController::class, 'register']); 
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+
 Route::get('/service-types', [ServiceTypeController::class, 'types']);
+
 Route::get('/services',  [ServiceController::class, 'index']);
+Route::get('/services/{service}', [ServiceController::class, 'show']); // public show
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me',       [AuthController::class, 'me']);
-    Route::post('/logout',  [AuthController::class, 'logout']);
-
-    Route::post('/services', [ServiceController::class, 'store']);
-});
-
-
-// Public
+// Peraheras public
 Route::get('/peraheras', [PeraheraController::class, 'index']);
 Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
 
-// Protected
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/peraheras', [PeraheraController::class, 'store']);
-    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
-    Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
-});
-
-
-// Blog Posts
-// Public routes
+// Blog posts public
 Route::get('/blog-posts', [BlogPostController::class, 'index']);
 Route::get('/blog-posts/{blogPost}', [BlogPostController::class, 'show']);
 
-// Authenticated routes
+
+/*
+|--------------------------------------------------------------------------
+| Protected routes (auth:sanctum)
+|--------------------------------------------------------------------------
+|
+| Authenticated actions: create/update/delete, profile, logout, etc.
+|
+*/
+
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth
+    Route::get('/me',      [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Services (service providers can create/update/delete their own; admin can delete)
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::get('/my-services', [ServiceController::class, 'myServices']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    // Peraheras (admin or organizer)
+    Route::post('/peraheras', [PeraheraController::class, 'store']);
+    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
+    Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
+
+    // Blog posts (users create/update/delete their own; admin can delete any)
     Route::post('/blog-posts', [BlogPostController::class, 'store']);
     Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update']);
     Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy']);
+});
+
+// PUBLIC (read-only)
+Route::get('/about-items', [AboutItemController::class, 'index']);
+Route::get('/about-items/{aboutItem}', [AboutItemController::class, 'show']);
+
+Route::get('/sub-about-items', [SubAboutItemController::class, 'index']);
+Route::get('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'show']);
+
+Route::get('/sub-about-item-contents', [SubAboutItemContentController::class, 'index']);
+Route::get('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'show']);
+
+Route::get('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'index']);
+Route::get('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'show']);
+
+// ADMIN (protected)
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // About items
+    Route::post('/about-items', [AboutItemController::class, 'store']);
+    Route::put('/about-items/{aboutItem}', [AboutItemController::class, 'update']);
+    Route::delete('/about-items/{aboutItem}', [AboutItemController::class, 'destroy']);
+
+    // Sub about items
+    Route::post('/sub-about-items', [SubAboutItemController::class, 'store']);
+    Route::put('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'update']);
+    Route::delete('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'destroy']);
+
+    // Contents
+    Route::post('/sub-about-item-contents', [SubAboutItemContentController::class, 'store']);
+    Route::put('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'update']);
+    Route::delete('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'destroy']);
+
+    // Details
+    Route::post('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'store']);
+    Route::put('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'update']);
+    Route::delete('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'destroy']);
 });

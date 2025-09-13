@@ -84,7 +84,7 @@ class AuthController extends Controller
                 'email'           => $user->email,
                 'user_type'       => $user->user_type,
                 'service_type_id' => $user->service_type_id,
-                'service_type'    => $user->serviceType?->service_type, 
+                'service_type'    => $user->serviceType?->name, 
             ],
             'redirect_to' => $redirect
         ]);
@@ -99,7 +99,7 @@ class AuthController extends Controller
             'email'           => $u->email,
             'user_type'       => $u->user_type,
             'service_type_id' => $u->service_type_id,
-            'service_type'    => $u->serviceType?->service_type,
+            'service_type'    => $u->serviceType?->name,
         ]);
     }
 

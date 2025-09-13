@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
+    // List all active services with optional filters
     public function index(Request $request)
     {
-        $query = Service::with(['serviceType'])
+        $query = Service::with([
+            'serviceType:id,service_type',
+            'provider:id,username'
+        ])
             ->where('status', 'active');
 
         // Filter by service type
@@ -32,20 +36,22 @@ class ServiceController extends Controller
         }
 
         $services = $query->latest()->get();
-
         return response()->json($services);
     }
 
     // Get single service
     public function show($id)
     {
-        $service = Service::with(['serviceType', 'user'])
+        $service = Service::with([
+            'serviceType:id,name',
+            'provider:id,name'
+        ])
             ->where('status', 'active')
             ->findOrFail($id);
-
         return response()->json($service);
     }
 
+    // List logged-in service provider's services
     public function myServices(Request $request)
     {
         $user = $request->user();
@@ -57,6 +63,7 @@ class ServiceController extends Controller
         return $user->services()->with('serviceType')->latest()->get();
     }
 
+    // Create new service
     public function store(Request $request)
     {
         $user = $request->user();
@@ -72,14 +79,9 @@ class ServiceController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-        ]);
+            'image' => ['nullable', 'string', 'url', 'max:255'], // keep in sync with DB column
 
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('services', 'public');
-        }
+        ]);
 
         $service = Service::create([
             'user_id' => $user->id,
@@ -90,9 +92,50 @@ class ServiceController extends Controller
             'service_type_id' => $user->service_type_id,
             'price' => $data['price'] ?? null,
             'status' => $data['status'] ?? 'active',
-            'image' => $imagePath,
+            'image' => $data['image'] ?? null,
         ]);
 
+        $service->loadMissing(['serviceType', 'provider']);
+
         return response()->json($service, 201);
+    }
+
+    // Update service
+    public function update(Request $request, Service $service)
+    {
+        $user = $request->user();
+
+        if ($user->id !== $service->user_id && $user->user_type !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'string'],
+            'location' => ['sometimes', 'string', 'max:255'],
+            'phone' => ['sometimes', 'string', 'max:20'],
+            'price' => ['sometimes', 'decimal:0,2', 'min:0'],
+            'status' => ['sometimes', 'in:active,inactive'],
+            'image' => ['sometimes', 'nullable', 'string', 'url', 'starts_with:https://,http://', 'max:2048'], // image URL
+        ]);
+
+        $service->update($data);
+        $service->loadMissing(['serviceType', 'provider']);
+
+        return response()->json($service);
+    }
+
+    // Delete service
+    public function destroy(Request $request, Service $service)
+    {
+        $user = $request->user();
+
+        if ($user->id !== $service->user_id && $user->user_type !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $service->delete();
+
+        return response()->json(['message' => 'Service deleted']);
     }
 }
