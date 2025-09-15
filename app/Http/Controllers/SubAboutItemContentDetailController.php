@@ -10,14 +10,13 @@ class SubAboutItemContentDetailController extends Controller
     // Public - list all
     public function index()
     {
-        return response()->json(SubAboutItemContentDetail::with('subAboutItemContent')->latest()->get());
+        return response()->json(SubAboutItemContentDetail::with('content')->latest()->get());
     }
 
     // Public - single
-    public function show($id)
+    public function show(SubAboutItemContentDetail $subAboutItemContentDetail)
     {
-        $detail = SubAboutItemContentDetail::with('subAboutItemContent')->findOrFail($id);
-        return response()->json($detail);
+        return response()->json($subAboutItemContentDetail->load('content'));
     }
 
     // Admin - create

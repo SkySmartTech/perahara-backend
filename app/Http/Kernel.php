@@ -2,7 +2,7 @@
 
 namespace App\Http;
 
-use Fruitcake\Cors\HandleCors;
+use Illuminate\Http\Middleware\HandleCors;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -12,7 +12,7 @@ class Kernel extends HttpKernel
     // Global middleware
     protected $middleware = [
         // Keep only essential middleware for API
-        
+        HandleCors::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
@@ -26,7 +26,7 @@ class Kernel extends HttpKernel
 
     // Route middleware
     protected $routeMiddleware = [
-        'auth'  => Authenticate::class,
-        'admin' => EnsureAdmin::class,
+        'auth'  => \App\Http\Middleware\Authenticate::class,
+        'admin' => \App\Http\Middleware\EnsureAdmin::class,
     ];
 }
