@@ -9,62 +9,52 @@ use App\Http\Resources\PeraheraResource;
 
 class PeraheraController extends Controller
 {
-    public function index()
-    {
-        // anyone can view list of upcoming peraheras
-        $peraheras = Perahera::with('user')
-            ->where('status', 'active')
-            ->whereDate('start_date', '>=', now()->toDateString())
-            ->orderBy('start_date')
-            ->paginate(20);
+public function index()
+{
+    // Get all peraheras with organizer (user) info, paginated
+    $peraheras = Perahera::with('user')
+        ->orderBy('start_date')
+        ->paginate(20); // adjust per-page limit if needed
 
-        return PeraheraResource::collection($peraheras);
-    }
+    return PeraheraResource::collection($peraheras);
+}
 
     public function store(Request $request)
     {
         $user = $request->user();
 
         if (!in_array($user->user_type, ['admin', 'organizer'])) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Only admin or organizer can add Peraheras'], 403);
         }
 
         $data = $request->validate([
-            'name'        => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'user_id'     => ['prohibited'],
-            'start_date' => [
-                'required','date',
-                function ($attribute, $value, $fail) use ($request) {
-                    if (Carbon::parse($value)->lt(Carbon::today())) {
-                        $fail("The $attribute must be today or a future date.");
-                    }
-                    $endDate = $request->input('end_date');
-                    if ($endDate && Carbon::parse($value)->gt(Carbon::parse($endDate))) {
-                        $fail("The $attribute must be before or equal to the end date.");
-                    }
-                },
-            ],
-            'end_date' => [
-                'required','date',
-                function ($attribute, $value, $fail) use ($request) {
-                    $startDate = $request->input('start_date');
-                    if ($startDate && Carbon::parse($value)->lt(Carbon::parse($startDate))) {
-                        $fail("The $attribute must be after or equal to the start date.");
-                    }
-                },
-            ],
-            'image'       => ['nullable','string'], // can switch to file upload later
-            'location'    => ['required','string','max:255'],
-            'status'      => ['sometimes','in:active,inactive,cancelled'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'location' => ['required', 'string', 'max:255'],
+            'start_date' => ['required', 'date_format:Y-m-d'],
+            'end_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+            'status' => ['nullable', 'string', 'in:active,inactive,cancelled'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        $perahera = new Perahera($data);
-        $perahera->user()->associate($user);
-        $perahera->save();
-        return (new PeraheraResource($perahera->load('user')))
-            ->response()
-            ->setStatusCode(201);
+        // Handle image upload safely
+        $imagePath = null;
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $imagePath = $request->file('image')->store('perahera_images', 'public');
+        }
+
+        $perahera = Perahera::create([
+            'user_id' => $user->id,
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'location' => $data['location'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'status' => $data['status'] ?? 'active',
+            'image' => $imagePath,
+        ]);
+
+        return response()->json($perahera, 201);
     }
 
     public function show(Perahera $perahera)

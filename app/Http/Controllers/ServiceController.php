@@ -9,8 +9,7 @@ class ServiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Service::with(['serviceType'])
-            ->where('status', 'active');
+        $query = Service::with(['serviceType']);
 
         // Filter by service type
         if ($request->has('service_type_id')) {
@@ -27,7 +26,7 @@ class ServiceController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
+                ->orWhere('description', 'like', '%' . $search . '%');
             });
         }
 

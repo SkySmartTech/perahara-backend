@@ -13,12 +13,11 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('user_type', ['admin','user','organizer','service_provider'])->default('user');
-
-           
             $table->foreignId('service_type_id')
                   ->nullable()
                   ->constrained('service_types')
                   ->nullOnDelete();
+            $table->string('avatar')->nullable();
 
             $table->rememberToken();
             $table->timestamps();
