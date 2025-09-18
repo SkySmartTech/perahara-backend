@@ -18,7 +18,8 @@ class Service extends Model
         'image'
     ];
 
-    public function provider()
+    // Rename provider to user so your controller works
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

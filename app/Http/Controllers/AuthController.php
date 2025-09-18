@@ -9,6 +9,7 @@ use App\Models\ServiceType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -84,7 +85,7 @@ class AuthController extends Controller
                 'email'           => $user->email,
                 'user_type'       => $user->user_type,
                 'service_type_id' => $user->service_type_id,
-                'service_type'    => $user->serviceType?->service_type, 
+                'service_type'    => $user->serviceType?->name, 
             ],
             'redirect_to' => $redirect
         ]);
@@ -99,7 +100,81 @@ class AuthController extends Controller
             'email'           => $u->email,
             'user_type'       => $u->user_type,
             'service_type_id' => $u->service_type_id,
-            'service_type'    => $u->serviceType?->service_type,
+            'service_type'    => $u->serviceType?->name,
+            'avatar'          => $u->avatar,
+            'phone'           => $u->phone,
+        ]);
+    }
+
+    public function update(Request $request)
+    {
+        $user = $request->user();
+        
+        $validator = Validator::make($request->all(), [
+            'username' => [
+                'sometimes',
+                'required',
+                'string',
+                'alpha_dash',
+                'min:3',
+                'max:30',
+                Rule::unique('users')->ignore($user->id)
+            ],
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id)
+            ],
+            'current_password' => [
+                'required_with:password',
+                'string',
+                function ($attribute, $value, $fail) use ($user) {
+                    if (!Hash::check($value, $user->password)) {
+                        $fail('The current password is incorrect.');
+                    }
+                }
+            ],
+            'password' => ['sometimes', 'confirmed', 'min:8'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'avatar' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        // Remove current_password from update data
+        unset($data['current_password']);
+
+        // Hash new password if provided
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        // Handle avatar upload if it's a file (you might want to implement this separately)
+        // For now, we'll assume it's a URL or stored elsewhere
+
+        $user->update($data);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'user_type' => $user->user_type,
+                'service_type_id' => $user->service_type_id,
+                'service_type' => $user->serviceType?->name,
+                'phone' => $user->phone,
+                'avatar' => $user->avatar,
+            ]
         ]);
     }
 
