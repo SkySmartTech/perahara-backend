@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    /**
+     * Register a new user
+     */
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -23,7 +26,7 @@ class AuthController extends Controller
             'service_type_id' => ['nullable','exists:service_types,id'],
         ]);
 
-        
+        // Only service_provider can have service_type_id
         if ($data['user_type'] !== 'service_provider') {
             $data['service_type_id'] = null;
         } else {
@@ -32,7 +35,7 @@ class AuthController extends Controller
             ]);
         }
 
-        
+        // Prevent API registration for admin accounts
         if (($data['user_type'] ?? null) === 'admin') {
             return response()->json(['message' => 'Admin accounts cannot be created via API'], 403);
         }
@@ -48,6 +51,9 @@ class AuthController extends Controller
         return response()->json(['message' => 'Registered successfully'], 201);
     }
 
+    /**
+     * Login user and create token
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -62,13 +68,15 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
-        
-        $loginRecord = UserLogin::create([
+
+        // Record login
+        UserLogin::create([
             'user_id'    => $user->id,
             'ip_address' => $request->ip(),
             'login_at'   => Carbon::now(),
         ]);
 
+        // Determine redirect path based on user type
         $redirect = match ($user->user_type) {
             'admin'            => '/admin/dashboard',
             'organizer'        => '/organizer/dashboard',
@@ -85,12 +93,17 @@ class AuthController extends Controller
                 'email'           => $user->email,
                 'user_type'       => $user->user_type,
                 'service_type_id' => $user->service_type_id,
-                'service_type'    => $user->serviceType?->name, 
+                'service_type'    => $user->serviceType?->name,
+                'phone'           => $user->phone,
+                'avatar'          => $user->avatar,
             ],
             'redirect_to' => $redirect
         ]);
     }
 
+    /**
+     * Get currently authenticated user
+     */
     public function me(Request $request)
     {
         $u = $request->user();
@@ -101,11 +114,14 @@ class AuthController extends Controller
             'user_type'       => $u->user_type,
             'service_type_id' => $u->service_type_id,
             'service_type'    => $u->serviceType?->name,
-            'avatar'          => $u->avatar,
             'phone'           => $u->phone,
+            'avatar'          => $u->avatar,
         ]);
     }
 
+    /**
+     * Update user profile
+     */
     public function update(Request $request)
     {
         $user = $request->user();
@@ -158,32 +174,34 @@ class AuthController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
-        // Handle avatar upload if it's a file (you might want to implement this separately)
-        // For now, we'll assume it's a URL or stored elsewhere
-
         $user->update($data);
 
         return response()->json([
             'message' => 'Profile updated successfully',
             'user' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'user_type' => $user->user_type,
+                'id'              => $user->id,
+                'username'        => $user->username,
+                'email'           => $user->email,
+                'user_type'       => $user->user_type,
                 'service_type_id' => $user->service_type_id,
-                'service_type' => $user->serviceType?->name,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
+                'service_type'    => $user->serviceType?->name,
+                'phone'           => $user->phone,
+                'avatar'          => $user->avatar,
             ]
         ]);
     }
 
+    /**
+     * Logout user and delete current token
+     */
     public function logout(Request $request)
     {
         $user = $request->user();
 
-        $request->user()->currentAccessToken()->delete();
+        // Delete current token
+        $user->currentAccessToken()->delete();
 
+        // Update last login record with logout time
         $lastLogin = UserLogin::where('user_id', $user->id)
                     ->latest('login_at')
                     ->first();
