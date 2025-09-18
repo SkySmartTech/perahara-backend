@@ -7,69 +7,40 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\BlogPostController;
 use App\Http\Controllers\PeraheraController;
 use App\Http\Controllers\ServiceTypeController;
-
 use App\Http\Controllers\AboutItemController;
 use App\Http\Controllers\SubAboutItemController;
 use App\Http\Controllers\SubAboutItemContentController;
 use App\Http\Controllers\SubAboutItemContentDetailController;
+
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| Public Routes
 |--------------------------------------------------------------------------
 |
-| Public routes (viewable without auth)
+| Routes accessible without authentication
 |
 */
 
+// Authentication
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 
+// Service Types
 Route::get('/service-types', [ServiceTypeController::class, 'types']);
 
+// Services (public)
 Route::get('/services',  [ServiceController::class, 'index']);
-Route::get('/services/{service}', [ServiceController::class, 'show']); // public show
+Route::get('/services/{service}', [ServiceController::class, 'show']);
 
-// Peraheras public
+// Peraheras (public)
 Route::get('/peraheras', [PeraheraController::class, 'index']);
 Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
 
-// Blog posts public
+// Blog posts (public)
 Route::get('/blog-posts', [BlogPostController::class, 'index']);
 Route::get('/blog-posts/{blogPost}', [BlogPostController::class, 'show']);
 
-
-/*
-|--------------------------------------------------------------------------
-| Protected routes (auth:sanctum)
-|--------------------------------------------------------------------------
-|
-| Authenticated actions: create/update/delete, profile, logout, etc.
-|
-*/
-
-Route::middleware('auth:sanctum')->group(function () {
-    // Auth
-    Route::get('/me',      [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Services (service providers can create/update/delete their own; admin can delete)
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::get('/my-services', [ServiceController::class, 'myServices']);
-    Route::put('/services/{service}', [ServiceController::class, 'update']);
-    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
-
-    // Peraheras (admin or organizer)
-    Route::post('/peraheras', [PeraheraController::class, 'store']);
-    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
-    Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
-
-    // Blog posts (users create/update/delete their own; admin can delete any)
-    Route::post('/blog-posts', [BlogPostController::class, 'store']);
-    Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update']);
-    Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy']);
-});
-
-// PUBLIC (read-only)
+// About sections (public)
 Route::get('/about-items', [AboutItemController::class, 'index']);
 Route::get('/about-items/{aboutItem}', [AboutItemController::class, 'show']);
 
@@ -82,7 +53,45 @@ Route::get('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemConten
 Route::get('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'index']);
 Route::get('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'show']);
 
-// ADMIN (protected)
+/*
+|--------------------------------------------------------------------------
+| Protected Routes
+|--------------------------------------------------------------------------
+|
+| Routes requiring authentication via Sanctum
+|
+*/
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Auth
+    Route::get('/me',      [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Services (service providers can manage their own; admin can delete any)
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::get('/my-services', [ServiceController::class, 'myServices']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    // Peraheras (admin or organizer)
+    Route::post('/peraheras', [PeraheraController::class, 'store']);
+    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
+    Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
+
+    // Blog posts (users manage their own; admin can delete any)
+    Route::post('/blog-posts', [BlogPostController::class, 'store']);
+    Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update']);
+    Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin-only Routes
+|--------------------------------------------------------------------------
+|
+| Routes requiring authentication and admin middleware
+|
+*/
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // About items
     Route::post('/about-items', [AboutItemController::class, 'store']);
@@ -94,12 +103,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'update']);
     Route::delete('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'destroy']);
 
-    // Contents
+    // Sub about item contents
     Route::post('/sub-about-item-contents', [SubAboutItemContentController::class, 'store']);
     Route::put('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'update']);
     Route::delete('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'destroy']);
 
-    // Details
+    // Sub about item content details
     Route::post('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'store']);
     Route::put('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'update']);
     Route::delete('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'destroy']);
