@@ -9,14 +9,14 @@ return new class extends Migration {
     {
         Schema::create('peraheras', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // admin or organizer
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('image', 2048)->nullable(); // store URL or file path
+            $table->string('image')->nullable();
             $table->string('location');
-            $table->enum('status', ['active', 'inactive', 'cancelled'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'pending'])->default('pending');
             $table->timestamps();
             $table->index(['start_date', 'status']);
         });

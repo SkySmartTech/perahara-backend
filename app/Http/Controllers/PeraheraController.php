@@ -9,15 +9,43 @@ use App\Http\Resources\PeraheraResource;
 
 class PeraheraController extends Controller
 {
-public function index()
-{
-    // Get all peraheras with organizer (user) info, paginated
-    $peraheras = Perahera::with('user')
-        ->orderBy('start_date')
-        ->paginate(20); // adjust per-page limit if needed
+    // 1️⃣ Display all peraheras (public) with pagination
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 20);
 
-    return PeraheraResource::collection($peraheras);
-}
+        $peraheras = Perahera::with('user')
+            ->orderBy('start_date', 'asc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => PeraheraResource::collection($peraheras)->resolve(),
+            'meta' => [
+                'current_page' => $peraheras->currentPage(),
+                'last_page'    => $peraheras->lastPage(),
+                'per_page'     => $peraheras->perPage(),
+                'total'        => $peraheras->total(),
+            ],
+        ]);
+    }
+
+    // 2️⃣ Display logged-in organizer's peraheras (dashboard) without pagination
+    public function indexUser(Request $request)
+    {
+        $user = $request->user();
+
+        $query = Perahera::with('user')->orderBy('start_date', 'asc');
+
+        if ($user && $user->user_type === 'organizer') {
+            $query->where('user_id', $user->id);
+        }
+
+        $peraheras = $query->get(); // fetch all peraheras for this user
+
+        return response()->json([
+            'data' => PeraheraResource::collection($peraheras)->resolve(),
+        ]);
+    }
 
     public function store(Request $request)
     {

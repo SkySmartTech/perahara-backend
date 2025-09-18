@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->string('phone', 20);
             $table->decimal('price', 10, 2)->nullable();
             $table->string('image')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['active', 'inactive','pending'])->default('pending');
             $table->timestamps();
         });
     }

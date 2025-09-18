@@ -34,7 +34,7 @@ Route::get('/services/{service}', [ServiceController::class, 'show']);
 
 // Peraheras (public)
 Route::get('/peraheras', [PeraheraController::class, 'index']);
-Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
+Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);   
 
 // Blog posts (public)
 Route::get('/blog-posts', [BlogPostController::class, 'index']);
@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
 
     // Peraheras (admin or organizer)
+    Route::get('/my-peraheras', [PeraheraController::class, 'indexUser']);
     Route::post('/peraheras', [PeraheraController::class, 'store']);
     Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
     Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
