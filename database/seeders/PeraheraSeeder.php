@@ -10,114 +10,204 @@ class PeraheraSeeder extends Seeder
 {
     public function run()
     {
-        Perahera::create([
-            'name' => 'Esala Perahera',
-            'description' => 'The most famous perahera in Sri Lanka',
-            'start_date' => Carbon::today()->addDays(5),
-            'end_date' => Carbon::today()->addDays(10),
-            'location' => 'Kandy, Sri Lanka',
-            'image' => 'esala-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1 // Make sure this user exists
-        ]);
+        $events = [
+            [
+                'name' => 'Esala Perahera',
+                'short_description' => 'The most famous perahera in Sri Lanka',
+                'description' => 'The most famous perahera in Sri Lanka',
+                'start_date' => Carbon::today()->addDays(5),
+                'end_date' => Carbon::today()->addDays(10),
+                'event_time' => '18:00:00',
+                'location' => 'Kandy, Sri Lanka',
+                'image' => 'esala-perahera.jpg',
+            ],
+            [
+                'name' => 'Vesak Perahera',
+                'short_description' => 'Buddhist festival perahera',
+                'description' => 'Buddhist festival perahera',
+                'start_date' => Carbon::today()->addDays(15),
+                'end_date' => Carbon::today()->addDays(16),
+                'event_time' => '17:00:00',
+                'location' => 'Colombo, Sri Lanka',
+                'image' => 'vesak-perahera.jpg',
+            ],
+            [
+                'name' => 'Kataragama Perahera',
+                'short_description' => 'A multi-religious festival perahera',
+                'description' => 'A multi-religious festival perahera',
+                'start_date' => Carbon::today()->addDays(20),
+                'end_date' => Carbon::today()->addDays(25),
+                'event_time' => '19:00:00',
+                'location' => 'Kataragama, Sri Lanka',
+                'image' => 'kataragama-perahera.jpg',
+            ],
+            [
+                'name' => 'Nallur Perahera',
+                'short_description' => 'A grand Hindu festival perahera',
+                'description' => 'A grand Hindu festival perahera',
+                'start_date' => Carbon::today()->addDays(30),
+                'end_date' => Carbon::today()->addDays(35),
+                'event_time' => '18:30:00',
+                'location' => 'Jaffna, Sri Lanka',
+                'image' => 'nallur-perahera.jpg',
+            ],
+            [
+                'name' => 'Maha Shivaratri Perahera',
+                'short_description' => 'A night-long Hindu festival perahera',
+                'description' => 'A night-long Hindu festival perahera',
+                'start_date' => Carbon::today()->addDays(40),
+                'end_date' => Carbon::today()->addDays(41),
+                'event_time' => '20:00:00',
+                'location' => 'Pattini Devale, Sri Lanka',
+                'image' => 'maha-shivaratri-perahera.jpg',
+            ],
+            [
+                'name' => 'Galle Face Perahera',
+                'short_description' => 'A vibrant city festival perahera',
+                'description' => 'A vibrant city festival perahera',
+                'start_date' => Carbon::today()->addDays(45),
+                'end_date' => Carbon::today()->addDays(46),
+                'event_time' => '17:30:00',
+                'location' => 'Galle Face Green, Colombo, Sri Lanka',
+                'image' => 'galle-face-perahera.jpg',
+            ],
+            [
+                'name' => 'Anuradhapura Perahera',
+                'short_description' => 'A historic city festival perahera',
+                'description' => 'A historic city festival perahera',
+                'start_date' => Carbon::today()->addDays(50),
+                'end_date' => Carbon::today()->addDays(55),
+                'event_time' => '18:15:00',
+                'location' => 'Anuradhapura, Sri Lanka',
+                'image' => 'anuradhapura-perahera.jpg',
+            ],
+            [
+                'name' => 'Polonnaruwa Perahera',
+                'short_description' => 'A cultural heritage festival perahera',
+                'description' => 'A cultural heritage festival perahera',
+                'start_date' => Carbon::today()->addDays(60),
+                'end_date' => Carbon::today()->addDays(65),
+                'event_time' => '19:30:00',
+                'location' => 'Polonnaruwa, Sri Lanka',
+                'image' => 'polonnaruwa-perahera.jpg',
+            ],
+            [
+                'name' => 'Dambulla Perahera',
+                'short_description' => 'A cave temple festival perahera',
+                'description' => 'A cave temple festival perahera',
+                'start_date' => Carbon::today()->addDays(70),
+                'end_date' => Carbon::today()->addDays(75),
+                'event_time' => '18:45:00',
+                'location' => 'Dambulla, Sri Lanka',
+                'image' => 'dambulla-perahera.jpg',
+            ],
+            [
+                'name' => 'Trincomalee Perahera',
+                'short_description' => 'A coastal city festival perahera',
+                'description' => 'A coastal city festival perahera',
+                'start_date' => Carbon::today()->addDays(80),
+                'end_date' => Carbon::today()->addDays(85),
+                'event_time' => '17:15:00',
+                'location' => 'Trincomalee, Sri Lanka',
+                'image' => 'trincomalee-perahera.jpg',
+            ],
+            [
+                'name' => 'Hambantota Perahera',
+                'short_description' => 'A southern city festival perahera',
+                'description' => 'A southern city festival perahera',
+                'start_date' => Carbon::today()->addDays(90),
+                'end_date' => Carbon::today()->addDays(95),
+                'event_time' => '18:20:00',
+                'location' => 'Hambantota, Sri Lanka',
+                'image' => 'hambantota-perahera.jpg',
+            ],
+            [
+                'name' => 'Matara Perahera',
+                'short_description' => 'A vibrant southern city festival perahera',
+                'description' => 'A vibrant southern city festival perahera',
+                'start_date' => Carbon::today()->addDays(100),
+                'end_date' => Carbon::today()->addDays(105),
+                'event_time' => '19:10:00',
+                'location' => 'Matara, Sri Lanka',
+                'image' => 'matara-perahera.jpg',
+            ],
+            [
+                'name' => 'Gampaha Perahera',
+                'short_description' => 'A lively city festival perahera',
+                'description' => 'A lively city festival perahera',
+                'start_date' => Carbon::today()->addDays(110),
+                'end_date' => Carbon::today()->addDays(115),
+                'event_time' => '18:05:00',
+                'location' => 'Gampaha, Sri Lanka',
+                'image' => 'gampaha-perahera.jpg',
+            ],
+            [
+                'name' => 'Negombo Perahera',
+                'short_description' => 'A coastal city festival perahera',
+                'description' => 'A coastal city festival perahera',
+                'start_date' => Carbon::today()->addDays(120),
+                'end_date' => Carbon::today()->addDays(125),
+                'event_time' => '17:45:00',
+                'location' => 'Negombo, Sri Lanka',
+                'image' => 'negombo-perahera.jpg',
+            ],
+            [
+                'name' => 'Kalutara Perahera',
+                'short_description' => 'A beach city festival perahera',
+                'description' => 'A beach city festival perahera',
+                'start_date' => Carbon::today()->addDays(130),
+                'end_date' => Carbon::today()->addDays(135),
+                'event_time' => '18:25:00',
+                'location' => 'Kalutara, Sri Lanka',
+                'image' => 'kalutara-perahera.jpg',
+            ],
+            [
+                'name' => 'Ratnapura Perahera',
+                'short_description' => 'A gem city festival perahera',
+                'description' => 'A gem city festival perahera',
+                'start_date' => Carbon::today()->addDays(140),
+                'end_date' => Carbon::today()->addDays(145),
+                'event_time' => '19:20:00',
+                'location' => 'Ratnapura, Sri Lanka',
+                'image' => 'ratnapura-perahera.jpg',
+            ],
+            [
+                'name' => 'Badulla Perahera',
+                'short_description' => 'A hill country city festival perahera',
+                'description' => 'A hill country city festival perahera',
+                'start_date' => Carbon::today()->addDays(150),
+                'end_date' => Carbon::today()->addDays(155),
+                'event_time' => '18:55:00',
+                'location' => 'Badulla, Sri Lanka',
+                'image' => 'badulla-perahera.jpg',
+            ],
+            [
+                'name' => 'Nuwara Eliya Perahera',
+                'short_description' => 'A cool hill station festival perahera',
+                'description' => 'A cool hill station festival perahera',
+                'start_date' => Carbon::today()->addDays(160),
+                'end_date' => Carbon::today()->addDays(165),
+                'event_time' => '17:55:00',
+                'location' => 'Nuwara Eliya, Sri Lanka',
+                'image' => 'nuwara-eliya-perahera.jpg',
+            ],
+            [
+                'name' => 'Ella Perahera',
+                'short_description' => 'A scenic hill town festival perahera',
+                'description' => 'A scenic hill town festival perahera',
+                'start_date' => Carbon::today()->addDays(170),
+                'end_date' => Carbon::today()->addDays(175),
+                'event_time' => '18:35:00',
+                'location' => 'Ella, Sri Lanka',
+                'image' => 'ella-perahera.jpg',
+            ],
+        ];
 
-        Perahera::create([
-            'name' => 'Vesak Perahera',
-            'description' => 'Buddhist festival perahera',
-            'start_date' => Carbon::today()->addDays(15),
-            'end_date' => Carbon::today()->addDays(16),
-            'location' => 'Colombo, Sri Lanka',
-            'image' => 'vesak-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1
-        ]);
-
-        Perahera::create([
-            'name' => 'Esala Perahera',
-            'description' => 'The most famous perahera in Sri Lanka',
-            'start_date' => Carbon::today()->addDays(5),
-            'end_date' => Carbon::today()->addDays(10),
-            'location' => 'Kandy, Sri Lanka',
-            'image' => 'esala-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1 // Make sure this user exists
-        ]);
-
-        Perahera::create([
-            'name' => 'Vesak Perahera',
-            'description' => 'Buddhist festival perahera',
-            'start_date' => Carbon::today()->addDays(15),
-            'end_date' => Carbon::today()->addDays(16),
-            'location' => 'Colombo, Sri Lanka',
-            'image' => 'vesak-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1
-        ]);
-
-        Perahera::create([
-            'name' => 'Esala Perahera',
-            'description' => 'The most famous perahera in Sri Lanka',
-            'start_date' => Carbon::today()->addDays(5),
-            'end_date' => Carbon::today()->addDays(10),
-            'location' => 'Kandy, Sri Lanka',
-            'image' => 'esala-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1 // Make sure this user exists
-        ]);
-
-        Perahera::create([
-            'name' => 'Vesak Perahera',
-            'description' => 'Buddhist festival perahera',
-            'start_date' => Carbon::today()->addDays(15),
-            'end_date' => Carbon::today()->addDays(16),
-            'location' => 'Colombo, Sri Lanka',
-            'image' => 'vesak-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1
-        ]);
-
-        Perahera::create([
-            'name' => 'Esala Perahera',
-            'description' => 'The most famous perahera in Sri Lanka',
-            'start_date' => Carbon::today()->addDays(5),
-            'end_date' => Carbon::today()->addDays(10),
-            'location' => 'Kandy, Sri Lanka',
-            'image' => 'esala-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1 // Make sure this user exists
-        ]);
-
-        Perahera::create([
-            'name' => 'Vesak Perahera',
-            'description' => 'Buddhist festival perahera',
-            'start_date' => Carbon::today()->addDays(15),
-            'end_date' => Carbon::today()->addDays(16),
-            'location' => 'Colombo, Sri Lanka',
-            'image' => 'vesak-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1
-        ]);
-
-        Perahera::create([
-            'name' => 'Esala Perahera',
-            'description' => 'The most famous perahera in Sri Lanka',
-            'start_date' => Carbon::today()->addDays(5),
-            'end_date' => Carbon::today()->addDays(10),
-            'location' => 'Kandy, Sri Lanka',
-            'image' => 'esala-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1 // Make sure this user exists
-        ]);
-
-        Perahera::create([
-            'name' => 'Vesak Perahera',
-            'description' => 'Buddhist festival perahera',
-            'start_date' => Carbon::today()->addDays(15),
-            'end_date' => Carbon::today()->addDays(16),
-            'location' => 'Colombo, Sri Lanka',
-            'image' => 'vesak-perahera.jpg',
-            'status' => 'active',
-            'user_id' => 1
-        ]);
+        foreach ($events as $event) {
+            Perahera::create(array_merge($event, [
+                'status' => 'active',
+                'user_id' => 1, // Make sure this user exists
+            ]));
+        }
     }
 }

@@ -11,9 +11,11 @@ class PeraheraResource extends JsonResource
         return [
             'id'          => $this->id,
             'name'        => $this->name,
+            'short_description' => $this->short_description,
             'description' => $this->description,
-            'start_date'  => $this->start_date,
-            'end_date'    => $this->end_date,
+            'start_date'  => $this->start_date ? $this->start_date->format('Y-m-d') : null,
+            'end_date'    => $this->end_date ? $this->end_date->format('Y-m-d') : null,
+            'event_time'  => $this->event_time ? $this->event_time->format('H:i') : null,
             'image'       => $this->image,
             'location'    => $this->location,
             'status'      => $this->status,

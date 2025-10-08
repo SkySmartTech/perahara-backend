@@ -4,37 +4,107 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
+use App\Http\Resources\BlogPostResource;
 use Illuminate\Support\Facades\Auth;
 
 class BlogPostController extends Controller
 {
-    // Public: view all posts
-    public function index()
+    /**
+     * Display a list of published posts (public).
+     */
+    public function latest()
     {
-        return BlogPost::with('user:id,username')->latest()->paginate(15);
+        $posts = BlogPost::with('user:id,username')
+            ->where('status', 'published')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return response()->json([
+            'data' => BlogPostResource::collection($posts)->resolve()
+        ]);
     }
 
-    // Public: view a single post
+    /**
+     * Display all posts with pagination (public).
+     */
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 15);
+
+        $posts = BlogPost::with('user:id,username')
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => BlogPostResource::collection($posts)->resolve(),
+            'meta' => [
+                'current_page' => $posts->currentPage(),
+                'last_page'    => $posts->lastPage(),
+                'per_page'     => $posts->perPage(),
+                'total'        => $posts->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Display a single post (public).
+     */
     public function show(BlogPost $blogPost)
     {
+        // Only show published posts to public
+        if ($blogPost->status !== 'published' && 
+            Auth::id() !== $blogPost->user_id && 
+            Auth::user()?->user_type !== 'admin') 
+        {
+            return response()->json(['message' => 'Not available'], 403);
+        }
+
         return $blogPost->load('user:id,username');
     }
 
-    // Authenticated: create post
+    /**
+     * Store a newly created post (auth required).
+     */
     public function store(Request $request)
     {
+        $user = $request->user();
+
+        // Only normal users or admins can create posts
+        if (!in_array($user->user_type, ['user', 'admin'])) {
+            return response()->json(['message' => 'Only registered users can add blog posts'], 403);
+        }
+
         $data = $request->validate([
-            'title'     => ['required','string','max:255'],
-            'content'   => ['required','string'],
-            'image_url' => ['nullable','url','max:2048'],
+            'title'             => ['required', 'string', 'max:255'],
+            'short_description' => ['required', 'string', 'max:500'],
+            'content'           => ['required', 'string'],
+            'image'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'status'            => ['nullable', 'string', 'in:pending,published,unpublished'],
         ]);
 
-        $post = $request->user()->blogPosts()->create($data);
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('blog_posts', 'public');
+        }
 
-        return response()->json($post, 201);
+        $post = BlogPost::create([
+            'user_id'            => $user->id,
+            'title'              => $data['title'],
+            'short_description'  => $data['short_description'],
+            'content'            => $data['content'],
+            'image_url'          => $imagePath,
+            'status'             => $data['status'] ?? 'pending',
+        ]);
+
+        // Load user relation so frontend can display username
+        return response()->json($post->load('user'), 201);
     }
 
-    // Authenticated: update own post
+    /**
+     * Update a post (owner or admin only).
+     */
     public function update(Request $request, BlogPost $blogPost)
     {
         $user = $request->user();
@@ -44,17 +114,32 @@ class BlogPostController extends Controller
         }
 
         $data = $request->validate([
-            'title'     => ['sometimes','string','max:255'],
-            'content'   => ['sometimes','string'],
-            'image_url' => ['sometimes','nullable','url','max:2048'],
+            'title'             => ['sometimes','string','max:255'],
+            'short_description' => ['sometimes','string','max:500'],
+            'content'           => ['sometimes','string'],
+            'status'            => ['sometimes','in:pending,published,unpublished'],
+            'image'             => ['sometimes','nullable','image','mimes:jpeg,png,jpg,gif','max:2048'],
         ]);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('blog_posts', 'public');
+            $data['image_url'] = $imagePath;
+        }
+
+        // Only admin can change status
+        if (isset($data['status']) && $user->user_type !== 'admin') {
+            unset($data['status']);
+        }
 
         $blogPost->update($data);
 
-        return response()->json($blogPost);
+        return response()->json($blogPost->load('user'));
     }
 
-    // Authenticated: delete own post OR admin can delete any post
+    /**
+     * Delete a post (owner or admin only).
+     */
     public function destroy(Request $request, BlogPost $blogPost)
     {
         $user = $request->user();

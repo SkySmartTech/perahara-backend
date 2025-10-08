@@ -10,24 +10,33 @@ use App\Http\Resources\PeraheraResource;
 class PeraheraController extends Controller
 {
     // 1️⃣ Display all peraheras (public) with pagination
-    public function index(Request $request)
-    {
-        $perPage = $request->input('per_page', 20);
+public function index(Request $request)
+{
+    $perPage = $request->input('per_page', 20);
+    $today = Carbon::today();
 
-        $peraheras = Perahera::with('user')
-            ->orderBy('start_date', 'asc')
-            ->paginate($perPage);
+    $peraheras = Perahera::with('user')
+        ->where(function ($query) use ($today) {
+            $query->whereNull('end_date')
+                  ->whereDate('start_date', '>=', $today)
+                  ->orWhere(function ($q) use ($today) {
+                      $q->whereNotNull('end_date')
+                        ->whereDate('end_date', '>=', $today);
+                  });
+        })
+        ->orderBy('start_date', 'asc')
+        ->paginate($perPage);
 
-        return response()->json([
-            'data' => PeraheraResource::collection($peraheras)->resolve(),
-            'meta' => [
-                'current_page' => $peraheras->currentPage(),
-                'last_page'    => $peraheras->lastPage(),
-                'per_page'     => $peraheras->perPage(),
-                'total'        => $peraheras->total(),
-            ],
-        ]);
-    }
+    return response()->json([
+        'data' => PeraheraResource::collection($peraheras)->resolve(),
+        'meta' => [
+            'current_page' => $peraheras->currentPage(),
+            'last_page'    => $peraheras->lastPage(),
+            'per_page'     => $peraheras->perPage(),
+            'total'        => $peraheras->total(),
+        ],
+    ]);
+}
 
     // 2️⃣ Display logged-in organizer's peraheras (dashboard) without pagination
     public function indexUser(Request $request)
@@ -57,11 +66,13 @@ class PeraheraController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'short_description' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'location' => ['required', 'string', 'max:255'],
-            'start_date' => ['required', 'date_format:Y-m-d'],
-            'end_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:start_date'],
-            'status' => ['nullable', 'string', 'in:active,inactive,cancelled'],
+            'start_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+            'event_time' => ['required', 'date_format:H:i'],
+            'status' => ['nullable', 'string', 'in:active,inactive,pending'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
@@ -72,16 +83,18 @@ class PeraheraController extends Controller
         }
 
         $perahera = Perahera::create([
-            'user_id' => $user->id,
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'location' => $data['location'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'status' => $data['status'] ?? 'active',
-            'image' => $imagePath,
+            'user_id'           => $user->id,
+            'name'              => $data['name'],
+            'short_description' => $data['short_description'] ?? null,
+            'description'       => $data['description'] ?? null,
+            'location'          => $data['location'],
+            'start_date'        => $data['start_date'],
+            'end_date'          => $data['end_date'] ?? null,
+            'event_time'        => $data['event_time'],
+            'status'            => $data['status'] ?? 'pending',
+            'image'             => $imagePath,
         ]);
-
+        
         return response()->json($perahera, 201);
     }
 
@@ -95,53 +108,36 @@ class PeraheraController extends Controller
     {
         $user = $request->user();
 
+        // Authorization: only admin or organizer
         if (!in_array($user->user_type, ['admin', 'organizer'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // optional: ensure only the organizer or admin can edit
+        // Organizer can only update their own events
         if ($user->user_type === 'organizer' && $perahera->user_id !== $user->id) {
             return response()->json(['message' => 'You can only update your own events'], 403);
         }
 
+        // Validate incoming data
         $data = $request->validate([
-            'name'        => ['sometimes','string','max:255'],
-            'description' => ['sometimes', 'nullable','string'],
-            'start_date' => [
-                'sometimes','date',
-                function ($attribute, $value, $fail) use ($request, $perahera) {
-                    $today = Carbon::today();
-                    $startDate = Carbon::parse($value);
-
-                    if ($startDate->lt($today)) {
-                        $fail("The $attribute must be today or a future date.");
-                    }
-
-                    $endDate = $request->input('end_date', $perahera->end_date);
-                    if ($endDate && $startDate->gt(Carbon::parse($endDate))) {
-                        $fail("The $attribute must be before or equal to the end date.");
-                    }
-                },
-            ],
-
-            'end_date' => [
-                'sometimes','date',
-                function ($attribute, $value, $fail) use ($request, $perahera) {
-                    $endDate = Carbon::parse($value);
-                    $startDate = $request->input('start_date', $perahera->start_date);
-
-                    if ($startDate && $endDate->lt(Carbon::parse($startDate))) {
-                        $fail("The $attribute must be after or equal to the start date.");
-                    }
-                },
-            ],
-            'image'       => ['sometimes', 'nullable','string'],
-            'location'    => ['sometimes','string','max:255'],
-            'status'      => ['sometimes','in:active,inactive,cancelled'],
+            'name'        => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'start_date'  => ['sometimes', 'date'],
+            'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
+            'location'    => ['sometimes', 'string', 'max:255'],
+            'status'      => ['sometimes', 'in:active,inactive,pending'],
+            'image'       => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
+        // Handle image upload
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $data['image'] = $request->file('image')->store('perahera_images', 'public');
+        }
+
+        // Update the Perahera
         $perahera->update($data);
 
+        // Return updated resource with user relationship
         return new PeraheraResource($perahera->loadMissing('user'));
     }
 

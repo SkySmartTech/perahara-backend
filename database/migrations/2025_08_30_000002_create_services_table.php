@@ -12,10 +12,11 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('service_type_id')->constrained('service_types')->cascadeOnDelete();
             $table->string('name');
-            $table->text('description')->nullable();
+            $table->text('short_description');
+            $table->text('description');
             $table->string('location');
             $table->string('phone', 20);
-            $table->decimal('price', 10, 2)->nullable();
+            $table->decimal('price', 10, 2);
             $table->string('image')->nullable();
             $table->enum('status', ['active', 'inactive','pending'])->default('pending');
             $table->timestamps();

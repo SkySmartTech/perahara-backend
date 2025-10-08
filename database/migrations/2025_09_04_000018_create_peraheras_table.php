@@ -11,9 +11,11 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
-            $table->text('description')->nullable();
+            $table->text('short_description');
+            $table->text('description');
+            $table->time('event_time');
             $table->date('start_date');
-            $table->date('end_date');
+            $table->date('end_date')->nullable();
             $table->string('image')->nullable();
             $table->string('location');
             $table->enum('status', ['active', 'inactive', 'pending'])->default('pending');

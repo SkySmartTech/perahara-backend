@@ -38,6 +38,7 @@ Route::get('/peraheras/{perahera}', [PeraheraController::class, 'show']);
 
 // Blog posts (public)
 Route::get('/blog-posts', [BlogPostController::class, 'index']);
+Route::get('/blog-posts/latest', [BlogPostController::class, 'latest']);
 Route::get('/blog-posts/{blogPost}', [BlogPostController::class, 'show']);
 
 // About sections (public)
@@ -76,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Peraheras (admin or organizer)
     Route::get('/my-peraheras', [PeraheraController::class, 'indexUser']);
     Route::post('/peraheras', [PeraheraController::class, 'store']);
-    Route::patch('/peraheras/{perahera}', [PeraheraController::class, 'update']);
+    Route::put('/peraheras/{perahera}', [PeraheraController::class, 'update']);
     Route::delete('/peraheras/{perahera}', [PeraheraController::class, 'destroy']);
 
     // Blog posts (users manage their own; admin can delete any)
@@ -93,24 +94,24 @@ Route::middleware('auth:sanctum')->group(function () {
 | Routes requiring authentication and admin middleware
 |
 */
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    // About items
-    Route::post('/about-items', [AboutItemController::class, 'store']);
-    Route::put('/about-items/{aboutItem}', [AboutItemController::class, 'update']);
-    Route::delete('/about-items/{aboutItem}', [AboutItemController::class, 'destroy']);
+// Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+//     // About items
+//     Route::post('/about-items', [AboutItemController::class, 'store']);
+//     Route::put('/about-items/{aboutItem}', [AboutItemController::class, 'update']);
+//     Route::delete('/about-items/{aboutItem}', [AboutItemController::class, 'destroy']);
 
-    // Sub about items
-    Route::post('/sub-about-items', [SubAboutItemController::class, 'store']);
-    Route::put('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'update']);
-    Route::delete('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'destroy']);
+//     // Sub about items
+//     Route::post('/sub-about-items', [SubAboutItemController::class, 'store']);
+//     Route::put('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'update']);
+//     Route::delete('/sub-about-items/{subAboutItem}', [SubAboutItemController::class, 'destroy']);
 
-    // Sub about item contents
-    Route::post('/sub-about-item-contents', [SubAboutItemContentController::class, 'store']);
-    Route::put('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'update']);
-    Route::delete('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'destroy']);
+//     // Sub about item contents
+//     Route::post('/sub-about-item-contents', [SubAboutItemContentController::class, 'store']);
+//     Route::put('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'update']);
+//     Route::delete('/sub-about-item-contents/{subAboutItemContent}', [SubAboutItemContentController::class, 'destroy']);
 
-    // Sub about item content details
-    Route::post('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'store']);
-    Route::put('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'update']);
-    Route::delete('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'destroy']);
-});
+//     // Sub about item content details
+//     Route::post('/sub-about-item-content-details', [SubAboutItemContentDetailController::class, 'store']);
+//     Route::put('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'update']);
+//     Route::delete('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'destroy']);
+// });

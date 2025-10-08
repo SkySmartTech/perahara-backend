@@ -7,14 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     protected $fillable = [
-        'user_id', 
-        'name', 
-        'description', 
-        'location', 
+        'user_id',
+        'name',
+        'short_description',
+        'description',
+        'location',
         'phone', 
-        'service_type_id', 
-        'price', 
-        'status', 
+        'service_type_id',
+        'price',
+        'status',
         'image'
     ];
 

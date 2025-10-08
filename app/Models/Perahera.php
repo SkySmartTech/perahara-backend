@@ -15,8 +15,10 @@ class Perahera extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'short_description',
         'description',
         'location',
+        'event_time',
         'start_date',
         'end_date',
         'status',
@@ -27,8 +29,9 @@ class Perahera extends Model
      * The attributes that should be cast to native types.
      */
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'date:Y-m-d',
+        'end_date'   => 'date:Y-m-d',
+        'event_time' => 'datetime:H:i',
     ];
 
     /**
