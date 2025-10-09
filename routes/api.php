@@ -115,3 +115,9 @@ Route::middleware('auth:sanctum')->group(function () {
 //     Route::put('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'update']);
 //     Route::delete('/sub-about-item-content-details/{subAboutItemContentDetail}', [SubAboutItemContentDetailController::class, 'destroy']);
 // });
+
+
+use App\Http\Controllers\PasswordResetController;
+
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);

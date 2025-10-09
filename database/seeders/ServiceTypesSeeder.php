@@ -10,9 +10,9 @@ class ServiceTypesSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['name' => 'perahara_item', 'description' => 'Items used in Perahera'],
-            ['name' => 'perahara_service', 'description' => 'General event services'],
-            ['name' => 'elephant_service', 'description' => 'Elephant hire & related services'],
+            ['name' => 'Perahara Item', 'description' => 'Items used in Perahera'],
+            ['name' => 'Perahara Service', 'description' => 'General event services'],
+            ['name' => 'Elephant Service', 'description' => 'Elephant hire & related services'],
         ];
 
         foreach ($types as $t) {

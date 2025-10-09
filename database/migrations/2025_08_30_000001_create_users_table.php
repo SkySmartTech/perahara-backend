@@ -18,7 +18,6 @@ return new class extends Migration {
                   ->constrained('service_types')
                   ->nullOnDelete();
             $table->string('avatar')->nullable();
-
             $table->rememberToken();
             $table->timestamps();
         });

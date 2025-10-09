@@ -16,17 +16,17 @@ class ServiceController extends Controller
         $query = Service::with(['serviceType']);
 
         // Filter by service type
-        if ($request->has('service_type_id')) {
+        if ($request->filled('service_type_id')) {
             $query->where('service_type_id', $request->service_type_id);
         }
 
         // Filter by location
-        if ($request->has('location')) {
+        if ($request->filled('location')) {
             $query->where('location', 'like', '%' . $request->location . '%');
         }
 
         // Filter by search term
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
@@ -34,8 +34,7 @@ class ServiceController extends Controller
             });
         }
 
-        $services = $query->latest()
-            ->paginate($perPage);
+        $services = $query->latest()->paginate($perPage);
 
         return response()->json([
             'data' => ServiceResource::collection($services)->resolve(),
@@ -48,7 +47,6 @@ class ServiceController extends Controller
         ]);
     }
 
-    // Get single service
     public function show($id)
     {
         $service = Service::with(['serviceType', 'user'])
@@ -84,30 +82,35 @@ class ServiceController extends Controller
             'location' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
-            'status' => ['nullable', 'string', 'in:active,inactive'],
+            'status' => ['nullable', 'string', 'in:active,inactive,pending'],
+            'service_type_id' => ['required', 'exists:service_types,id'], // ✅ fixed
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        // Handle image upload
+        // ✅ Handle image upload
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('services', 'public');
         }
 
+        // ✅ Create the service
         $service = Service::create([
             'user_id' => $user->id,
+            'service_type_id' => $data['service_type_id'], // ✅ from request
             'name' => $data['name'],
             'short_description' => $data['short_description'],
             'description' => $data['description'],
             'location' => $data['location'],
             'phone' => $data['phone'],
-            'service_type_id' => $user->service_type_id,
             'price' => $data['price'] ?? null,
             'status' => $data['status'] ?? 'pending',
             'image' => $imagePath,
         ]);
 
-        return response()->json($service, 201);
+        return response()->json([
+            'message' => 'Service created successfully',
+            'service' => $service,
+        ], 201);
     }
 
     public function update(Request $request, $id)
@@ -115,24 +118,23 @@ class ServiceController extends Controller
         $user = $request->user();
         $service = Service::findOrFail($id);
 
-        // ✅ Ensure only the owner or admin can update
         if ($user->id !== $service->user_id && $user->user_type !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // ✅ Validate only provided fields (partial updates allowed)
         $data = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'short_description' => ['sometimes', 'required', 'string'],
-            'description' => ['sometimes', 'required', 'string'],
-            'location' => ['sometimes', 'required', 'string', 'max:255'],
-            'phone' => ['sometimes', 'required', 'string', 'max:20'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'short_description' => ['sometimes', 'string'],
+            'description' => ['sometimes', 'string'],
+            'location' => ['sometimes', 'string', 'max:255'],
+            'phone' => ['sometimes', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
+            'service_type_id' => ['sometimes', 'exists:service_types,id'], // ✅ optional on update
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        // ✅ Handle new image upload
+        // ✅ Handle new image
         if ($request->hasFile('image')) {
             if ($service->image && Storage::disk('public')->exists($service->image)) {
                 Storage::disk('public')->delete($service->image);
@@ -140,12 +142,11 @@ class ServiceController extends Controller
             $data['image'] = $request->file('image')->store('services', 'public');
         }
 
-        // ✅ Update and return fresh data
         $service->update($data);
 
         return response()->json([
             'message' => 'Service updated successfully',
-            'service' => $service->fresh(), // ensures updated data is returned
+            'service' => $service->fresh(),
         ]);
     }
 
@@ -154,12 +155,10 @@ class ServiceController extends Controller
         $user = $request->user();
         $service = Service::findOrFail($id);
 
-        // Ensure only the owner or admin can delete
         if ($user->id !== $service->user_id && $user->user_type !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // Delete service image if exists
         if ($service->image && Storage::disk('public')->exists($service->image)) {
             Storage::disk('public')->delete($service->image);
         }

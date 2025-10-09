@@ -38,23 +38,23 @@ public function index(Request $request)
     ]);
 }
 
-    // 2️⃣ Display logged-in organizer's peraheras (dashboard) without pagination
-    public function indexUser(Request $request)
-    {
-        $user = $request->user();
+// 2️⃣ Display logged-in organizer's peraheras (dashboard) without pagination
+public function indexUser(Request $request)
+{
+    $user = $request->user();
 
-        $query = Perahera::with('user')->orderBy('start_date', 'asc');
+    $query = Perahera::with('user')->orderBy('start_date', 'asc');
 
-        if ($user && $user->user_type === 'organizer') {
-            $query->where('user_id', $user->id);
-        }
-
-        $peraheras = $query->get(); // fetch all peraheras for this user
-
-        return response()->json([
-            'data' => PeraheraResource::collection($peraheras)->resolve(),
-        ]);
+    if ($user && $user->user_type === 'organizer') {
+        $query->where('user_id', $user->id);
     }
+
+    $peraheras = $query->get(); // fetch all peraheras for this user
+
+    return response()->json([
+        'data' => PeraheraResource::collection($peraheras)->resolve(),
+    ]);
+}
 
     public function store(Request $request)
     {
