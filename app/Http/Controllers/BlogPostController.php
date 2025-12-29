@@ -60,7 +60,7 @@ class BlogPostController extends Controller
             return response()->json(['message' => 'Not available'], 403);
         }
 
-        return new BlogPostResource($blogPost->load('user:id,username'));
+        return $blogPost->load('user:id,username');
     }
 
     /**
