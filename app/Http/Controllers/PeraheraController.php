@@ -9,52 +9,56 @@ use App\Http\Resources\PeraheraResource;
 
 class PeraheraController extends Controller
 {
-    // 1️⃣ Display all peraheras (public) with pagination
-public function index(Request $request)
-{
-    $perPage = $request->input('per_page', 20);
-    $today = Carbon::today();
+    /**
+     * Display all peraheras (public) with pagination
+     */
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 20);
+        $today = Carbon::today();
 
-    $peraheras = Perahera::with('user')
-        ->where(function ($query) use ($today) {
-            $query->whereNull('end_date')
-                  ->whereDate('start_date', '>=', $today)
-                  ->orWhere(function ($q) use ($today) {
-                      $q->whereNotNull('end_date')
-                        ->whereDate('end_date', '>=', $today);
-                  });
-        })
-        ->orderBy('start_date', 'asc')
-        ->paginate($perPage);
+        $peraheras = Perahera::with('user')
+            ->where(function ($query) use ($today) {
+                $query->whereNull('end_date')
+                      ->whereDate('start_date', '>=', $today)
+                      ->orWhere(function ($q) use ($today) {
+                          $q->whereNotNull('end_date')
+                            ->whereDate('end_date', '>=', $today);
+                      });
+            })
+            ->orderBy('start_date', 'asc')
+            ->paginate($perPage);
 
-    return response()->json([
-        'data' => PeraheraResource::collection($peraheras)->resolve(),
-        'meta' => [
-            'current_page' => $peraheras->currentPage(),
-            'last_page'    => $peraheras->lastPage(),
-            'per_page'     => $peraheras->perPage(),
-            'total'        => $peraheras->total(),
-        ],
-    ]);
-}
-
-// 2️⃣ Display logged-in organizer's peraheras (dashboard) without pagination
-public function indexUser(Request $request)
-{
-    $user = $request->user();
-
-    $query = Perahera::with('user')->orderBy('start_date', 'asc');
-
-    if ($user && $user->user_type === 'organizer') {
-        $query->where('user_id', $user->id);
+        return response()->json([
+            'data' => PeraheraResource::collection($peraheras)->resolve(),
+            'meta' => [
+                'current_page' => $peraheras->currentPage(),
+                'last_page'    => $peraheras->lastPage(),
+                'per_page'     => $peraheras->perPage(),
+                'total'        => $peraheras->total(),
+            ],
+        ]);
     }
 
-    $peraheras = $query->get(); // fetch all peraheras for this user
+    /**
+     * Display logged-in organizer's peraheras (dashboard) without pagination
+     */
+    public function indexUser(Request $request)
+    {
+        $user = $request->user();
 
-    return response()->json([
-        'data' => PeraheraResource::collection($peraheras)->resolve(),
-    ]);
-}
+        $query = Perahera::with('user')->orderBy('start_date', 'asc');
+
+        if ($user && $user->user_type === 'organizer') {
+            $query->where('user_id', $user->id);
+        }
+
+        $peraheras = $query->get(); // fetch all peraheras for this user
+
+        return response()->json([
+            'data' => PeraheraResource::collection($peraheras)->resolve(),
+        ]);
+    }
 
     public function store(Request $request)
     {
@@ -66,8 +70,8 @@ public function indexUser(Request $request)
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'short_description' => ['nullable', 'string'],
-            'description' => ['nullable', 'string'],
+            'short_description' => ['required', 'string'],
+            'description' => ['required', 'string'],
             'location' => ['required', 'string', 'max:255'],
             'start_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
             'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
@@ -85,8 +89,8 @@ public function indexUser(Request $request)
         $perahera = Perahera::create([
             'user_id'           => $user->id,
             'name'              => $data['name'],
-            'short_description' => $data['short_description'] ?? null,
-            'description'       => $data['description'] ?? null,
+            'short_description' => $data['short_description'],
+            'description'       => $data['description'],
             'location'          => $data['location'],
             'start_date'        => $data['start_date'],
             'end_date'          => $data['end_date'] ?? null,
@@ -100,8 +104,7 @@ public function indexUser(Request $request)
 
     public function show(Perahera $perahera)
     {
-        return $perahera->load('user');
-        
+        return new PeraheraResource($perahera->load('user'));
     }
 
     public function update(Request $request, Perahera $perahera)

@@ -53,7 +53,7 @@ class ServiceController extends Controller
             ->where('status', 'active')
             ->findOrFail($id);
 
-        return response()->json($service);
+        return new ServiceResource($service);
     }
 
     public function myServices(Request $request)
@@ -83,20 +83,20 @@ class ServiceController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
-            'service_type_id' => ['required', 'exists:service_types,id'], // ✅ fixed
+            'service_type_id' => ['required', 'exists:service_types,id'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        // ✅ Handle image upload
+        // Handle image upload
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('services', 'public');
         }
 
-        // ✅ Create the service
+        // Create the service
         $service = Service::create([
             'user_id' => $user->id,
-            'service_type_id' => $data['service_type_id'], // ✅ from request
+            'service_type_id' => $data['service_type_id'],
             'name' => $data['name'],
             'short_description' => $data['short_description'],
             'description' => $data['description'],
@@ -130,11 +130,11 @@ class ServiceController extends Controller
             'phone' => ['sometimes', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
-            'service_type_id' => ['sometimes', 'exists:service_types,id'], // ✅ optional on update
+            'service_type_id' => ['sometimes', 'exists:service_types,id'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        // ✅ Handle new image
+        // Handle new image
         if ($request->hasFile('image')) {
             if ($service->image && Storage::disk('public')->exists($service->image)) {
                 Storage::disk('public')->delete($service->image);
