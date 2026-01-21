@@ -14,9 +14,10 @@ return new class extends Migration {
             $table->string('name');
             $table->text('short_description');
             $table->text('description');
-            $table->string('location');
+            $table->string('location')->nullable();
+            $table->string('fb')->nullable();
             $table->string('phone', 20);
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->nullable();
             $table->string('image')->nullable();
             $table->enum('status', ['active', 'inactive','pending'])->default('pending');
             $table->timestamps();

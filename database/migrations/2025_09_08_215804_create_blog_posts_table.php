@@ -18,7 +18,6 @@ return new class extends Migration {
             $table->string('title');
             $table->text('short_description');
             $table->longText('content');
-            $table->string('image_url', 2048)->nullable();
             $table->enum('status', ['pending', 'published', 'unpublished'])
                   ->default('pending');
 

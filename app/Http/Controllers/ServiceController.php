@@ -30,7 +30,7 @@ class ServiceController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
+                    ->orWhere('description', 'like', '%' . $search . '%');
             });
         }
 
@@ -79,12 +79,13 @@ class ServiceController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'short_description' => ['required', 'string'],
             'description' => ['required', 'string'],
-            'location' => ['required', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
+            'fb' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
+            'service_type_id' => ['required', 'string'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
-            'service_type_id' => ['required', 'exists:service_types,id'], // ✅ fixed
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
         ]);
 
         // ✅ Handle image upload
@@ -96,11 +97,12 @@ class ServiceController extends Controller
         // ✅ Create the service
         $service = Service::create([
             'user_id' => $user->id,
-            'service_type_id' => $data['service_type_id'], // ✅ from request
+            'service_type_id' => $data['service_type_id'],
             'name' => $data['name'],
             'short_description' => $data['short_description'],
             'description' => $data['description'],
-            'location' => $data['location'],
+            'location' => $data['location'] ?? null,
+            'fb' => $data['fb'] ?? null,
             'phone' => $data['phone'],
             'price' => $data['price'] ?? null,
             'status' => $data['status'] ?? 'pending',
@@ -126,12 +128,13 @@ class ServiceController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'short_description' => ['sometimes', 'string'],
             'description' => ['sometimes', 'string'],
-            'location' => ['sometimes', 'string', 'max:255'],
-            'phone' => ['sometimes', 'string', 'max:20'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'fb' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
-            'service_type_id' => ['sometimes', 'exists:service_types,id'], // ✅ optional on update
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'service_type_id' => ['sometimes', 'exists:service_types,id'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
         ]);
 
         // ✅ Handle new image

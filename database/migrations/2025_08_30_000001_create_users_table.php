@@ -10,13 +10,18 @@ return new class extends Migration {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('username')->unique();
-            $table->string('email')->unique();
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->string('email')->nullable(); // ✅ nullable + unique is fine
+            $table->string('phone');
             $table->string('password');
-            $table->enum('user_type', ['admin','user','organizer','service_provider'])->default('user');
+            $table->enum('user_type', ['admin', 'user', 'organizer', 'service_provider'])
+                  ->default('user');
             $table->foreignId('service_type_id')
                   ->nullable()
                   ->constrained('service_types')
-                  ->nullOnDelete();
+                  ->cascadeOnUpdate() // ✅ keeps referential integrity
+                  ->nullOnDelete();   // ✅ sets null when the related service type is deleted
             $table->string('avatar')->nullable();
             $table->rememberToken();
             $table->timestamps();
@@ -40,8 +45,9 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
+        // ✅ Drop tables in reverse order to prevent foreign key issues
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

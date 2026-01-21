@@ -12,6 +12,7 @@ class Service extends Model
         'short_description',
         'description',
         'location',
+        'fb',
         'phone', 
         'service_type_id',
         'price',

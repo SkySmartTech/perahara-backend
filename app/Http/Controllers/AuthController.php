@@ -9,6 +9,7 @@ use App\Models\ServiceType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -18,37 +19,43 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // Validate input
         $data = $request->validate([
-            'username'        => ['required','string','alpha_dash','min:3','max:30','unique:users,username'],
-            'email'           => ['required','email','max:255','unique:users,email'],
-            'password'        => ['required','confirmed','min:8'],
-            'user_type'       => ['required', Rule::in(['user','organizer','service_provider'])],
-            'service_type_id' => ['nullable','exists:service_types,id'],
+            'username'        => ['required', 'string', 'alpha_dash', 'min:3', 'max:30', 'unique:users,username'],
+            'first_name'      => ['required', 'string', 'min:3', 'max:50'],
+            'last_name'       => ['required', 'string', 'min:2', 'max:50'],
+            'email'           => ['required', 'email', 'max:255'],
+            'phone'           => ['required', 'string', 'max:15'],
+            'password'        => ['required', 'confirmed', 'min:8'],
+            'user_type'       => ['required', Rule::in(['user', 'organizer', 'service_provider'])],
         ]);
 
-        // Only service_provider can have service_type_id
-        if ($data['user_type'] !== 'service_provider') {
-            $data['service_type_id'] = null;
-        } else {
-            $request->validate([
-                'service_type_id' => ['required','exists:service_types,id']
-            ]);
-        }
-
-        // Prevent API registration for admin accounts
+        // Prevent admin account creation via API
         if (($data['user_type'] ?? null) === 'admin') {
             return response()->json(['message' => 'Admin accounts cannot be created via API'], 403);
         }
 
+        // Create user
         $user = User::create([
             'username'        => $data['username'],
+            'first_name'      => $data['first_name'],
+            'last_name'       => $data['last_name'],
             'email'           => $data['email'],
+            'phone'           => $data['phone'],
             'password'        => Hash::make($data['password']),
             'user_type'       => $data['user_type'],
-            'service_type_id' => $data['service_type_id'] ?? null,
         ]);
 
-        return response()->json(['message' => 'Registered successfully'], 201);
+        // Return response
+        return response()->json([
+            'message' => 'Registered successfully',
+            'user'    => [
+                'id'         => $user->id,
+                'username'   => $user->username,
+                'email'      => $user->email,
+                'user_type'  => $user->user_type,
+            ],
+        ], 201);
     }
 
     /**
@@ -57,11 +64,11 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => ['required','email'],
-            'password' => ['required','string'],
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('username', $credentials['username'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -109,6 +116,8 @@ class AuthController extends Controller
         $u = $request->user();
         return response()->json([
             'id'              => $u->id,
+            'first_name' => $u->first_name,
+            'last_name' => $u->last_name,
             'username'        => $u->username,
             'email'           => $u->email,
             'user_type'       => $u->user_type,
@@ -125,24 +134,13 @@ class AuthController extends Controller
     public function update(Request $request)
     {
         $user = $request->user();
-        
-        $validator = Validator::make($request->all(), [
-            'username' => [
-                'sometimes',
-                'required',
-                'string',
-                'alpha_dash',
-                'min:3',
-                'max:30',
-                Rule::unique('users')->ignore($user->id)
-            ],
-            'email' => [
-                'sometimes',
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id)
-            ],
+
+        $data = $request->validate([
+            'first_name' => ['sometimes', 'string', 'min:3'],
+            'last_name'  => ['sometimes', 'string', 'min:2'],
+            'username'   => ['sometimes', 'string', 'alpha_dash', 'min:3', 'max:30', Rule::unique('users')->ignore($user->id)],
+            'email'      => ['sometimes', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone'      => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'current_password' => [
                 'required_with:password',
                 'string',
@@ -153,43 +151,31 @@ class AuthController extends Controller
                 }
             ],
             'password' => ['sometimes', 'confirmed', 'min:8'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'avatar' => ['nullable', 'string', 'max:500'],
+            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $data = $validator->validated();
-
-        // Remove current_password from update data
         unset($data['current_password']);
 
-        // Hash new password if provided
-        if (isset($data['password'])) {
+        if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        }
+
+        // ✅ Handle new avatar
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
         $user->update($data);
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'user' => [
-                'id'              => $user->id,
-                'username'        => $user->username,
-                'email'           => $user->email,
-                'user_type'       => $user->user_type,
-                'service_type_id' => $user->service_type_id,
-                'service_type'    => $user->serviceType?->name,
-                'phone'           => $user->phone,
-                'avatar'          => $user->avatar,
-            ]
+            'service' => $user->fresh(),
         ]);
     }
+
 
     /**
      * Logout user and delete current token
@@ -203,8 +189,8 @@ class AuthController extends Controller
 
         // Update last login record with logout time
         $lastLogin = UserLogin::where('user_id', $user->id)
-                    ->latest('login_at')
-                    ->first();
+            ->latest('login_at')
+            ->first();
 
         if ($lastLogin && !$lastLogin->logout_at) {
             $lastLogin->update(['logout_at' => now()]);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
 use App\Http\Resources\BlogPostResource;
+use App\Models\BlogPostImage;
 use Illuminate\Support\Facades\Auth;
 
 class BlogPostController extends Controller
@@ -66,11 +67,46 @@ class BlogPostController extends Controller
     /**
      * Store a newly created post (auth required).
      */
+    // public function store(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     // Only normal users or admins can create posts
+    //     if (!in_array($user->user_type, ['user', 'admin'])) {
+    //         return response()->json(['message' => 'Only registered users can add blog posts'], 403);
+    //     }
+
+    //     $data = $request->validate([
+    //         'title'             => ['required', 'string', 'max:255'],
+    //         'short_description' => ['required', 'string', 'max:500'],
+    //         'content'           => ['required', 'string'],
+    //         'image'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+    //         'status'            => ['nullable', 'string', 'in:pending,published,unpublished'],
+    //     ]);
+
+    //     // Handle image upload
+    //     $imagePath = null;
+    //     if ($request->hasFile('image')) {
+    //         $imagePath = $request->file('image')->store('blog_posts', 'public');
+    //     }
+
+    //     $post = BlogPost::create([
+    //         'user_id'            => $user->id,
+    //         'title'              => $data['title'],
+    //         'short_description'  => $data['short_description'],
+    //         'content'            => $data['content'],
+    //         'image_url'          => $imagePath,
+    //         'status'             => $data['status'] ?? 'pending',
+    //     ]);
+
+    //     // Load user relation so frontend can display username
+    //     return response()->json($post->load('user'), 201);
+    // }
+
     public function store(Request $request)
     {
         $user = $request->user();
 
-        // Only normal users or admins can create posts
         if (!in_array($user->user_type, ['user', 'admin'])) {
             return response()->json(['message' => 'Only registered users can add blog posts'], 403);
         }
@@ -79,27 +115,30 @@ class BlogPostController extends Controller
             'title'             => ['required', 'string', 'max:255'],
             'short_description' => ['required', 'string', 'max:500'],
             'content'           => ['required', 'string'],
-            'image'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-            'status'            => ['nullable', 'string', 'in:pending,published,unpublished'],
+            'status'            => ['nullable', 'in:pending,published,unpublished'],
+            'images.*'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'], // ✅ 5MB limit
         ]);
-
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('blog_posts', 'public');
-        }
 
         $post = BlogPost::create([
-            'user_id'            => $user->id,
-            'title'              => $data['title'],
-            'short_description'  => $data['short_description'],
-            'content'            => $data['content'],
-            'image_url'          => $imagePath,
-            'status'             => $data['status'] ?? 'pending',
+            'user_id'           => $user->id,
+            'title'             => $data['title'],
+            'short_description' => $data['short_description'],
+            'content'           => $data['content'],
+            'status'            => $data['status'] ?? 'pending',
         ]);
 
-        // Load user relation so frontend can display username
-        return response()->json($post->load('user'), 201);
+        // ✅ Handle multiple image uploads
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('blog_posts', 'public');
+                BlogPostImage::create([
+                    'blog_post_id' => $post->id,
+                    'image_url'    => $path,
+                ]);
+            }
+        }
+
+        return response()->json(new BlogPostResource($post->load(['user', 'images'])), 201);
     }
 
     /**

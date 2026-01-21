@@ -73,7 +73,7 @@ public function indexUser(Request $request)
             'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'event_time' => ['required', 'date_format:H:i'],
             'status' => ['nullable', 'string', 'in:active,inactive,pending'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
         ]);
 
         // Handle image upload safely
@@ -126,7 +126,7 @@ public function indexUser(Request $request)
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
             'location'    => ['sometimes', 'string', 'max:255'],
             'status'      => ['sometimes', 'in:active,inactive,pending'],
-            'image'       => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'image'       => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
         ]);
 
         // Handle image upload

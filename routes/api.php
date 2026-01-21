@@ -8,9 +8,11 @@ use App\Http\Controllers\BlogPostController;
 use App\Http\Controllers\PeraheraController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AboutItemController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\SubAboutItemController;
 use App\Http\Controllers\SubAboutItemContentController;
 use App\Http\Controllers\SubAboutItemContentDetailController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +86,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/blog-posts', [BlogPostController::class, 'store']);
     Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update']);
     Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy']);
+
+    Route::post('/gallery', [GalleryController::class, 'store']);
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
 });
 
 /*

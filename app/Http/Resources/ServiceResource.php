@@ -24,8 +24,9 @@ class ServiceResource extends JsonResource
             'location' => $this->location,
             'phone' => $this->phone,
             'price' => $this->price,
+            'fb' => $this->fb,
             'status' => $this->status,
-            'image' => $this->image ? $baseUrl . '/' . $this->image : null,
+            'image' => $this->image,
             'service_type' => $this->whenLoaded('serviceType', function () {
                 return [
                     'id' => $this->serviceType->id,
